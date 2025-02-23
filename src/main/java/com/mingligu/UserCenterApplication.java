@@ -1,4 +1,4 @@
-package com.mingligu.usercenter;
+package com.mingligu;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

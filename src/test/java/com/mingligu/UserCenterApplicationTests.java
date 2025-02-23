@@ -1,7 +1,7 @@
-package com.mingligu.usercenter;
+package com.mingligu;
 
 import com.mingligu.mapper.UserMapper;
-import com.mingligu.orm.User;
+import com.mingligu.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
