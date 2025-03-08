@@ -3,6 +3,7 @@ import java.util.Date;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mingligu.constant.UserContact;
 import com.mingligu.mapper.UserMapper;
 import com.mingligu.model.User;
 import com.mingligu.service.UserService;
@@ -33,9 +34,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     //盐
     private static final String SALT = "mingligu";
-
-    //用户登录态
-    private static final String USER_LOGIN_STATE = "user_login_state";
 
     public UserServiceImpl(UserMapper userMapper) {
     }
@@ -131,8 +129,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         clearUser.setPhone(user.getPhone());
         clearUser.setEmail(user.getEmail());
         clearUser.setUserStatus(user.getUserStatus());
+        clearUser.setUserRole(user.getUserRole());
         //4、session中存储用户信息
-        request.getSession().setAttribute(USER_LOGIN_STATE, clearUser);
+        request.getSession().setAttribute(UserContact.USER_LOGIN_STATE, clearUser);
 
         return user;
     }

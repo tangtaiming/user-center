@@ -3,6 +3,8 @@ package com.mingligu.model;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
 
@@ -12,7 +14,7 @@ import lombok.Data;
  */
 @TableName(value ="user")
 @Data
-public class User {
+public class User implements Serializable {
     /**
      * 用户主键
      */
@@ -30,7 +32,7 @@ public class User {
     private String userName;
 
     /**
-     * 
+     *
      */
     private String avatar;
 
@@ -73,4 +75,9 @@ public class User {
      * 是否删除 0-正常 、1-删除
      */
     private Integer isDelete;
+
+    /**
+     * 0 普通用户, 1 超级管理员
+     */
+    private Integer userRole;
 }
