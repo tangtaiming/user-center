@@ -13,6 +13,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户接口
@@ -88,7 +89,11 @@ public class UserController {
             queryWrapper.like("userName", userName);
         }
 
-        return userService.list(queryWrapper);
+        List<User> userList = userService.list(queryWrapper);
+        return userList
+                .stream()
+                .map(it -> userService.getSafetyUser(it))
+                .collect(Collectors.toList());
     }
 
     /**

@@ -1,5 +1,4 @@
 package com.mingligu.service.impl;
-import java.util.Date;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
-import java.security.MessageDigest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -121,17 +119,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         //3、用户信息脱敏
-        User clearUser = new User();
-        clearUser.setUserAccount(user.getUserAccount());
-        clearUser.setUserName(user.getUserName());
-        clearUser.setAvatar(user.getAvatar());
-        clearUser.setGender(user.getGender());
-        clearUser.setPhone(user.getPhone());
-        clearUser.setEmail(user.getEmail());
-        clearUser.setUserStatus(user.getUserStatus());
-        clearUser.setUserRole(user.getUserRole());
+        User safteyUser = getSafetyUser(user);
         //4、session中存储用户信息
-        request.getSession().setAttribute(UserContact.USER_LOGIN_STATE, clearUser);
+        request.getSession().setAttribute(UserContact.USER_LOGIN_STATE, safteyUser);
 
         return user;
     }
@@ -146,6 +136,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         Pattern pattern = Pattern.compile(USERNAME_PATTERN);
         Matcher matcher = pattern.matcher(val);
         return matcher.find();
+    }
+
+    @Override
+    public User getSafetyUser(User originUser) {
+        User safetyUser = new User();
+        safetyUser.setUserAccount(originUser.getUserAccount());
+        safetyUser.setUserName(originUser.getUserName());
+        safetyUser.setAvatar(originUser.getAvatar());
+        safetyUser.setGender(originUser.getGender());
+        safetyUser.setPhone(originUser.getPhone());
+        safetyUser.setEmail(originUser.getEmail());
+        safetyUser.setUserStatus(originUser.getUserStatus());
+        safetyUser.setUserRole(originUser.getUserRole());
+
+        return safetyUser;
     }
 
 }
