@@ -2,6 +2,7 @@ package com.mingligu.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serializable;
@@ -74,6 +75,7 @@ public class User implements Serializable {
     /**
      * 是否删除 0-正常 、1-删除
      */
+    @TableLogic
     private Integer isDelete;
 
     /**
