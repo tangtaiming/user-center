@@ -37,4 +37,5 @@ build/
 .idea/
 user-center.iml
 target
+src/main/resources/application.yml
 
