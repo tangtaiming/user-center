@@ -1,11 +1,9 @@
 package com.mingligu.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-
-import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
 
@@ -15,7 +13,7 @@ import lombok.Data;
  */
 @TableName(value ="user")
 @Data
-public class User implements Serializable {
+public class User {
     /**
      * 用户主键
      */
@@ -75,11 +73,15 @@ public class User implements Serializable {
     /**
      * 是否删除 0-正常 、1-删除
      */
-    @TableLogic
     private Integer isDelete;
 
     /**
      * 0 普通用户, 1 超级管理员
      */
     private Integer userRole;
+
+    /**
+     * 邀请码
+     */
+    private String inviteCode;
 }

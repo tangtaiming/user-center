@@ -1,8 +1,12 @@
 package com.mingligu.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mingligu.common.ErrorCode;
 import com.mingligu.constant.UserContact;
+import com.mingligu.exception.BusinessException;
 import com.mingligu.mapper.UserMapper;
 import com.mingligu.model.User;
 import com.mingligu.service.UserService;
@@ -12,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,29 +38,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     //盐
     private static final String SALT = "mingligu";
+    private final UserMapper userMapper;
 
     public UserServiceImpl(UserMapper userMapper) {
+        this.userMapper = userMapper;
     }
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public List<User> list(Integer current, Integer pageSize, HttpServletRequest request) {
+        IPage<User> page = new Page<>(current, pageSize);
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        userMapper.selectPage(page, queryWrapper);
+
+        List<User> userList = page.getRecords();
+        List<User> safetyList = new ArrayList<>();
+        for (User user : userList) {
+            User newUser = getSafetyUser(user);
+            safetyList.add(newUser);
+        }
+
+        return safetyList;
+    }
+
+    @Override
+    public long userRegister(String userAccount, String userPassword, String checkPassword, String inviteCode) {
         //1、校验
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             //todo 目前返回一个 -1 代表失败
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_NULL_ERROR);
         }
         if (userAccount.length() < 4) {
             //todo 长度小于4 返回一个 -1 代表失败
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号长度小于4");
         }
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
             //todo 密码长度小于8 返回 -1 代表失败
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码长度小于8");
         }
         //账户校验特殊字符
         if (validateExitUserAccount(userAccount)) {
             //todo 存在特殊字符 返回 -1 代表失败
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号非法");
+        }
+        if (!StringUtils.equals("user123", inviteCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "邀请码错误");
         }
         //账户不能重复
         QueryWrapper<User> wh = new QueryWrapper<>();
@@ -62,12 +89,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         long dbCount = this.baseMapper.selectCount(wh);
         if (dbCount > 0) {
             //todo 账户存在 返回-1 代表失败
-            return -1;
+            throw new BusinessException(ErrorCode.DATA_IS_EXIST, "账号已存在");
         }
         //密码和校验密码是否相同
         if (!StringUtils.equals(userPassword, checkPassword)) {
             //todo 密码和校验密码不相同 返回 -1 代表失败
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码不一致");
         }
         //2、加密
         String newPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
@@ -75,10 +102,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(newPassword);
+        user.setInviteCode(inviteCode);
         boolean result = this.save(user);
         if (!result) {
             //插入失败 返回-1 代表失败
-            return -1;
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败");
         }
 
         return user.getId();
@@ -89,20 +117,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //1、校验
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             // todo 修改为自定义异常
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_NULL_ERROR);
         }
         if (userAccount.length() < 4) {
             // todo 修改为自定义异常
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户名长度小于4位!");
         }
         if (userPassword.length() < 8) {
             // todo 修改为自定义异常
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码长度小于8位!");
         }
         //账户校验特殊字符
         if (validateExitUserAccount(userAccount)) {
             // todo 修改为自定义异常
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账户名非法!");
         }
 
         //2、加密
@@ -115,7 +143,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (null == user) {
             log.info("user login failed, userAccount cannot match userPassword");
             // todo 修改为自定义异常
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_NULL_ERROR, "账户名/密码错误!");
         }
 
         //3、用户信息脱敏
@@ -123,7 +151,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //4、session中存储用户信息
         request.getSession().setAttribute(UserContact.USER_LOGIN_STATE, safteyUser);
 
-        return user;
+        return safteyUser;
     }
 
     /**
@@ -140,7 +168,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public User getSafetyUser(User originUser) {
+        if (null == originUser) {
+            return null;
+        }
+
         User safetyUser = new User();
+        safetyUser.setId(originUser.getId());
         safetyUser.setUserAccount(originUser.getUserAccount());
         safetyUser.setUserName(originUser.getUserName());
         safetyUser.setAvatar(originUser.getAvatar());
@@ -151,6 +184,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUserRole(originUser.getUserRole());
 
         return safetyUser;
+    }
+
+    @Override
+    public int userLogout(HttpServletRequest request) {
+        request.getSession().removeAttribute(UserContact.USER_LOGIN_STATE);
+        return 1;
     }
 
 }
