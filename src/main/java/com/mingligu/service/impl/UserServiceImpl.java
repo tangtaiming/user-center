@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -99,10 +100,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //2、加密
         String newPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         //3、插入用户数据
+        Date currentDate = new Date(System.currentTimeMillis());
+
         User user = new User();
+        user.setUserName("user" + currentDate.getTime());
         user.setUserAccount(userAccount);
         user.setUserPassword(newPassword);
         user.setInviteCode(inviteCode);
+        user.setCreateTime(currentDate);
+        user.setUpdateTime(currentDate);
         boolean result = this.save(user);
         if (!result) {
             //插入失败 返回-1 代表失败
