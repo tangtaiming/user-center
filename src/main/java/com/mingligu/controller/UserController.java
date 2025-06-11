@@ -181,8 +181,9 @@ public class UserController {
      * @return
      */
     @RequestMapping("/logout")
-    public int userLogout(HttpServletRequest request) {
-        return userService.userLogout(request);
+    public ResponseBase<Boolean> userLogout(HttpServletRequest request) {
+        userService.userLogout(request);
+        return ResponseUtil.ok();
     }
 
     /**
